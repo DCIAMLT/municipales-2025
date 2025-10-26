@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Elecciones Municipales - Los Taques 2025</title>
+    <!-- Carga de Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración del tema de Tailwind para usar la fuente Inter --><style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        /* Estilos personalizados para el contenedor del gráfico */
+        #resultsChartContainer {
+            position: relative;
+            height: 400px;
+            max-width: 900px;
+            margin: auto;
+        }
+        /* Estilos para el efecto de sombra y esquinas redondeadas */
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+    <!-- Ya no necesitamos Chart.js si eliminamos el gráfico. Mantenemos el script por si acaso, aunque no se usará --><!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --><!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> -->
+</head>
+<body>
+
+    <!-- Contenedor Principal --><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Encabezado de la Elección --><header class="mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 leading-tight mb-2">
+                Elecciones Municipales Los Taques 2025
+            </h1>
+            <p class="text-xl text-gray-500 border-b pb-4">
+                Ultima Actualización Nacional a las <span id="lastUpdate" class="font-medium text-blue-600">--:--</span>
+            </p>
+        </header>
+
+        <!-- Estado de Conteo (Movido y Rediseñado) --><div class="bg-white p-6 rounded-xl mb-8 card-shadow text-center">
+            <p class="text-sm font-medium text-gray-500">Mesas Escrutadas:</p>
+            <p class="text-3xl font-bold text-gray-900 mb-1">
+                <!-- Se agregó el ID 'total-tables' para que el valor sea dinámico desde JS -->
+                <span id="counted-tables">--</span> / <span id="total-tables">--</span>
+            </p>
+
+            <!-- Porcentaje de Escrutinio Destacado --><p id="counted-percent" class="text-xl font-bold text-blue-600 mb-4">
+                <!-- El porcentaje de mesas escrutadas se inyecta aquí -->
+            </p>
+
+            <!-- BARRA DE PROGRESO MOVIDA AQUÍ --><div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div id="escru-progressbar" class="h-4 bg-blue-600 transition-all duration-700 ease-out" style="width: 0%;"></div>
+            </div>
+            <!-- Fin de la barra de progreso -->
+        </div>
+
+        <!-- Resultados Detallados de Candidatos (Vista Móvil y Desktop) --><section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Candidatos y Votos</h2>
+            <div id="candidate-list" class="space-y-4">
+                <!-- Las tarjetas de candidatos se insertarán aquí mediante JavaScript --></div>
+        </section>
+
+        <!-- Resumen General de la Elección --><section class="bg-white p-6 rounded-xl card-shadow">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Información General de la Jornada</h2>
+            <!-- Se cambió md:grid-cols-4 a md:grid-cols-3 para distribuir mejor las 3 tarjetas --><div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+                <!-- Tarjeta 1: Votos Totales --><div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-xs font-medium text-gray-500 uppercase">Votos Válidos Contabilizados</p>
+                    <p id="total-valid-votes" class="text-3xl font-extrabold text-blue-700 mt-1">--</p>
+                </div>
+                <!-- Tarjeta 2: Censo Electoral --><div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-xs font-medium text-gray-500 uppercase">Total Censo Electoral</p>
+                    <p id="electoral-roll" class="text-3xl font-extrabold text-gray-900 mt-1">--</p>
+                </div>
+                <!-- Tarjeta 3: Participación --><div class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+                    <p class="text-xs font-medium text-green-700 uppercase">Participación</p>
+                    <p id="participation-rate" class="text-3xl font-extrabold text-green-700 mt-1">--</p>
+                </div>
+                <!-- Tarjeta 4: Abstención (ELIMINADA) -->
+            </div>
+            
+            <!-- ELIMINADO: El Bloque de Progreso de Escrutinio que estaba aquí ha sido movido arriba. -->
+
+            <div class="mt-6 text-sm text-gray-600">
+                <p><span class="font-bold">Nota:</span> Estos resultados son preliminares y se actualizan en tiempo real. Los resultados oficiales serán validados por el Tribunal Supremo Electoral.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Script de Inicialización y Lógica --><script>
+        // 1. Datos Ficticios de la Elección
+        const candidatesData = [
+            // Datos de los candidatos y votos
+            { id: 1, name: "Aurora Ríos", party: "Partido Esperanza", color: "#10B981", votes: 0, img: "https://placehold.co/80x80/10B981/ffffff?text=AR" },
+            { id: 2, name: "Marcos Vela", party: "Frente Popular", color: "#EF4444", votes: 0, img: "https://placehold.co/80x80/EF4444/ffffff?text=MV" },
+            //
+            // >>>>>> NUEVO CANDIDATO AÑADIDO AQUÍ <<<<<<
+            // Asegúrate de que el 'id' sea único y el 'color' sea un código hexadecimal válido.
+            //
+            { id: 3, name: "Votos Nulos", party: "Nulo", color: "#9CA3AF", votes: 0, img: "https://placehold.co/80x80/9CA3AF/ffffff?text=N" },
+            { id: 4, name: "Votos en Blanco", party: "Blanco", color: "#D1D5DB", votes: 0, img: "https://placehold.co/80x80/D1D5DB/ffffff?text=B" },
+        ];
+
+        const electoralData = {
+            electoralRoll: 52350, // Censo Electoral Total
+            // --------------------------------------------------------------------------
+            // CAMBIA ESTE VALOR para ajustar la cantidad de mesas escrutadas.
+            totalCountedTables: 0, // Mesas escrutadas (Cambiado de 12580 a 8500 para demostración)
+            // --------------------------------------------------------------------------
+            totalTables: 50 // Mesas totales
+        };
+
+        // 2. Función Principal para Calcular y Renderizar
+        function renderResults() {
+            // A. Cálculos Totales
+            // Suma solo los votos de candidatos válidos para el cálculo de porcentaje
+            const totalValidVotesOnly = candidatesData
+                .filter(c => c.party !== 'Nulo' && c.party !== 'Blanco')
+                .reduce((sum, c) => sum + c.votes, 0);
+
+            // Suma todos los votos (candidatos + nulos/blancos) para el total de participación
+            const totalVotes = candidatesData.reduce((sum, c) => sum + c.votes, 0);
+
+            const participationRate = ((totalVotes / electoralData.electoralRoll) * 100).toFixed(2);
+            
+            // Porcentaje de mesas escrutadas
+            const countedTablesRate = ((electoralData.totalCountedTables / electoralData.totalTables) * 100).toFixed(2);
+
+
+            // B. Renderizar Estadísticas Generales
+            document.getElementById('total-valid-votes').textContent = totalVotes.toLocaleString('es-ES'); // Muestra el total de votos (válidos + nulos/blancos)
+            document.getElementById('electoral-roll').textContent = electoralData.electoralRoll.toLocaleString('es-ES');
+            document.getElementById('participation-rate').textContent = `${participationRate}%`;
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
+
+            // --- Actualizar Bloque de Escrutinio (movido arriba) ---
+            document.getElementById('counted-tables').textContent = electoralData.totalCountedTables.toLocaleString('es-ES');
+            
+            // >>>>> ESTA ES LA LÍNEA AGREGADA para actualizar el total de mesas
+            document.getElementById('total-tables').textContent = electoralData.totalTables.toLocaleString('es-ES');
+            // ----------------------------------------------------------------
+
+            // Ahora mostramos el porcentaje con el texto "Escrutado" en el mismo elemento:
+            document.getElementById('counted-percent').textContent = `${countedTablesRate}% Escrutado`;
+
+            const progressBar = document.getElementById('escru-progressbar');
+            progressBar.style.width = `${countedTablesRate}%`;
+            // ----------------------------------------------------
+
+
+            // C. Renderizar Lista de Candidatos
+            const candidateList = document.getElementById('candidate-list');
+            candidateList.innerHTML = ''; // Limpiar lista
+
+            // 1. Ordenar solo candidatos por votos (descendente)
+            const sortedCandidates = candidatesData
+                .filter(c => c.party !== 'Nulo' && c.party !== 'Blanco') // Solo candidatos
+                .sort((a, b) => b.votes - a.votes);
+
+            let rank = 1;
+            sortedCandidates.forEach(candidate => {
+                // Cálculo de porcentaje sobre el total de VOTOS VÁLIDOS (sin nulos/blancos)
+                const percentage = ((candidate.votes / totalValidVotesOnly) * 100).toFixed(2);
+                const isWinner = rank === 1;
+
+                const cardHtml = `
+                    <div class="flex flex-col md:flex-row items-center bg-white p-4 rounded-xl card-shadow transition duration-300 hover:shadow-lg ${isWinner ? 'border-l-8 border-yellow-500' : ''}">
+
+                        <!-- Posición y Foto --><div class="flex items-center space-x-4 w-full md:w-auto mb-4 md:mb-0">
+                            <span class="text-3xl font-extrabold ${isWinner ? 'text-yellow-600' : 'text-gray-400'}">${rank}°</span>
+                            <!-- IMAGEN DEL CANDIDATO --><img src="${candidate.img}" alt="Foto de ${candidate.name}" class="w-16 h-16 rounded-full object-cover border-4" style="border-color: ${candidate.color};" onerror="this.onerror=null; this.src='https://placehold.co/80x80/9CA3AF/ffffff?text=${candidate.name.substring(0,2).replace(/\s/g, '+')}'">
+                        </div>
+
+                        <!-- Nombre y Partido --><div class="flex-grow text-center md:text-left md:ml-6 w-full md:w-auto mb-4 md:mb-0">
+                            <p class="text-xl font-bold text-gray-900">${candidate.name} ${isWinner ? '🏆' : ''}</p>
+                            <!-- COLOR DEL PARTIDO --><div class="text-sm font-medium text-white px-2 py-0.5 inline-block rounded-full mt-1" style="background-color: ${candidate.color};">
+                                ${candidate.party}
+                            </div>
+                        </div>
+
+                        <!-- Barra de Progreso y Datos --><div class="w-full md:w-1/3 space-y-2">
+                            <div class="flex justify-between items-center text-sm font-semibold">
+                                <span class="text-gray-700">Votos: ${candidate.votes.toLocaleString('es-ES')}</span>
+                                <!-- COLOR DEL CANDIDATO EN EL PORCENTAJE --><span class="text-lg font-extrabold" style="color: ${candidate.color};">${percentage}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <!-- COLOR DEL CANDIDATO EN LA BARRA DE PROGRESO --><div class="h-3 rounded-full" style="width: ${percentage}%; background-color: ${candidate.color};"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                candidateList.insertAdjacentHTML('beforeend', cardHtml);
+                rank++;
+            });
+
+            // Agregamos Nulos y Blancos al final (opcional)
+            const otherVotes = candidatesData.filter(c => c.party === 'Nulo' || c.party === 'Blanco');
+
+            otherVotes.forEach(voteType => {
+                // Cálculo de porcentaje sobre el total de VOTOS VÁLIDOS (sin nulos/blancos)
+                const percentage = ((voteType.votes / totalValidVotesOnly) * 100).toFixed(2);
+                
+                const otherHtml = `
+                    <div class="flex flex-col md:flex-row items-center bg-white p-4 rounded-xl card-shadow transition duration-300 hover:shadow-lg">
+                        <div class="flex items-center space-x-4 w-full md:w-auto mb-4 md:mb-0">
+                            <span class="text-3xl font-extrabold text-gray-400">--</span>
+                            <img src="${voteType.img}" alt="Icono de ${voteType.name}" class="w-16 h-16 rounded-full object-cover border-4" style="border-color: ${voteType.color};" onerror="this.onerror=null; this.src='https://placehold.co/80x80/9CA3AF/ffffff?text=OV'">
+                        </div>
+
+                        <div class="flex-grow text-center md:text-left md:ml-6 w-full md:w-auto mb-4 md:mb-0">
+                            <p class="text-xl font-bold text-gray-900">${voteType.name}</p>
+                            <div class="text-sm font-medium text-white px-2 py-0.5 inline-block rounded-full mt-1" style="background-color: ${voteType.color};">
+                                Voto Especial
+                            </div>
+                        </div>
+
+                        <div class="w-full md:w-1/3 space-y-2">
+                            <div class="flex justify-between items-center text-sm font-semibold">
+                                <span class="text-gray-700">Votos: ${voteType.votes.toLocaleString('es-ES')}</span>
+                                <span class="text-lg font-extrabold" style="color: ${voteType.color};">${percentage}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="h-3 rounded-full" style="width: ${percentage}%; background-color: ${voteType.color};"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                candidateList.insertAdjacentHTML('beforeend', otherHtml);
+            });
+
+
+            // D. Renderizar Gráfico (Chart.js) - ELIMINADO EL CÓDIGO DEL GRÁFICO
+            if (window.electionChart) {
+                window.electionChart.destroy();
+            }
+            // Los datos necesarios para el gráfico ya no son llamados.
+        }
+
+        // 3. Inicializar y Actualizar
+        document.addEventListener('DOMContentLoaded', () => {
+            renderResults();
+
+            // Simular actualización de datos cada 30 segundos
+            // setInterval(() => {
+            //     // Aquí iría una llamada a una API real para obtener datos actualizados
+            //     // Por ahora, solo refrescamos la hora y los cálculos
+            //     renderResults();
+            // }, 30000);
+        });
+    </script>
+</body>
+</html>
