@@ -63,24 +63,30 @@
 
         <!-- Resumen General de la Elección --><section class="bg-white p-6 rounded-xl card-shadow">
             <h2 class="text-2xl font-semibold text-gray-800 mb-4">Información General de la Jornada</h2>
-            <!-- Se cambió md:grid-cols-4 a md:grid-cols-3 para distribuir mejor las 3 tarjetas --><div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
-                <!-- Tarjeta 1: Votos Totales --><div class="bg-gray-50 p-4 rounded-lg">
-                    <p class="text-xs font-medium text-gray-500 uppercase">Votos Válidos Contabilizados</p>
+            <!-- Cambiada la estructura del grid para incluir 4 bloques de información -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <!-- Tarjeta 1: Votos Totales (Candidatos + Nulos + Blancos) -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p class="text-xs font-medium text-gray-500 uppercase">Votos Totales Emitidos</p>
+                    <p id="total-votes-all" class="text-3xl font-extrabold text-blue-700 mt-1">--</p>
+                </div>
+                <!-- Tarjeta 2: Votos Válidos (Solo Candidatos) -->
+                <div class="bg-gray-50 p-4 rounded-lg border-2 border-blue-300">
+                    <p class="text-xs font-medium text-blue-700 uppercase">Votos Válidos</p>
                     <p id="total-valid-votes" class="text-3xl font-extrabold text-blue-700 mt-1">--</p>
                 </div>
-                <!-- Tarjeta 2: Censo Electoral --><div class="bg-gray-50 p-4 rounded-lg">
+                <!-- Tarjeta 3: Censo Electoral -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <p class="text-xs font-medium text-gray-500 uppercase">Total Censo Electoral</p>
                     <p id="electoral-roll" class="text-3xl font-extrabold text-gray-900 mt-1">--</p>
                 </div>
-                <!-- Tarjeta 3: Participación --><div class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+                <!-- Tarjeta 4: Participación -->
+                <div class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
                     <p class="text-xs font-medium text-green-700 uppercase">Participación</p>
                     <p id="participation-rate" class="text-3xl font-extrabold text-green-700 mt-1">--</p>
                 </div>
-                <!-- Tarjeta 4: Abstención (ELIMINADA) -->
             </div>
             
-            <!-- ELIMINADO: El Bloque de Progreso de Escrutinio que estaba aquí ha sido movido arriba. -->
-
             <div class="mt-6 text-sm text-gray-600">
                 <p><span class="font-bold">Nota:</span> Estos resultados son preliminares y se actualizan en tiempo real. Los resultados oficiales serán validados por el Tribunal Supremo Electoral.</p>
             </div>
@@ -113,14 +119,15 @@
         // 2. Función Principal para Calcular y Renderizar
         function renderResults() {
             // A. Cálculos Totales
-            // Suma solo los votos de candidatos válidos para el cálculo de porcentaje
+            
+            // 1. Total de Votos Válidos (SÓLO CANDIDATOS) - USADO COMO DENOMINADOR para CANDIDATOS
             const totalValidVotesOnly = candidatesData
                 .filter(c => c.party !== 'Nulo' && c.party !== 'Blanco')
                 .reduce((sum, c) => sum + c.votes, 0);
 
-            // Suma todos los votos (candidatos + nulos/blancos) para el total de participación
+            // 2. Total de Votos Emitidos (CANDIDATOS + NULOS + BLANCOS) - USADO COMO DENOMINADOR para NULOS/BLANCOS
             const totalVotes = candidatesData.reduce((sum, c) => sum + c.votes, 0);
-
+            
             const participationRate = ((totalVotes / electoralData.electoralRoll) * 100).toFixed(2);
             
             // Porcentaje de mesas escrutadas
@@ -128,19 +135,19 @@
 
 
             // B. Renderizar Estadísticas Generales
-            document.getElementById('total-valid-votes').textContent = totalVotes.toLocaleString('es-ES'); // Muestra el total de votos (válidos + nulos/blancos)
+            // Bloque Votos Totales Emitidos
+            document.getElementById('total-votes-all').textContent = totalVotes.toLocaleString('es-ES'); 
+            // Bloque Votos Válidos (Solo Candidatos)
+            document.getElementById('total-valid-votes').textContent = totalValidVotesOnly.toLocaleString('es-ES'); 
+            
             document.getElementById('electoral-roll').textContent = electoralData.electoralRoll.toLocaleString('es-ES');
             document.getElementById('participation-rate').textContent = `${participationRate}%`;
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
 
-            // --- Actualizar Bloque de Escrutinio (movido arriba) ---
+            // --- Actualizar Bloque de Escrutinio ---
             document.getElementById('counted-tables').textContent = electoralData.totalCountedTables.toLocaleString('es-ES');
-            
-            // >>>>> ESTA ES LA LÍNEA AGREGADA para actualizar el total de mesas
             document.getElementById('total-tables').textContent = electoralData.totalTables.toLocaleString('es-ES');
-            // ----------------------------------------------------------------
 
-            // Ahora mostramos el porcentaje con el texto "Escrutado" en el mismo elemento:
             document.getElementById('counted-percent').textContent = `${countedTablesRate}% Escrutado`;
 
             const progressBar = document.getElementById('escru-progressbar');
@@ -159,7 +166,7 @@
 
             let rank = 1;
             sortedCandidates.forEach(candidate => {
-                // Cálculo de porcentaje sobre el total de VOTOS VÁLIDOS (sin nulos/blancos)
+                // ****** Lógica de Porcentaje para CANDIDATOS: VOTOS VÁLIDOS (totalValidVotesOnly) ******
                 const percentage = ((candidate.votes / totalValidVotesOnly) * 100).toFixed(2);
                 const isWinner = rank === 1;
 
@@ -197,8 +204,8 @@
             const otherVotes = candidatesData.filter(c => c.party === 'Nulo' || c.party === 'Blanco');
 
             otherVotes.forEach(voteType => {
-                // Cálculo de porcentaje sobre el total de VOTOS VÁLIDOS (sin nulos/blancos)
-                const percentage = ((voteType.votes / totalValidVotesOnly) * 100).toFixed(2);
+                // ****** Lógica de Porcentaje para NULOS/BLANCOS: VOTOS TOTALES (totalVotes) ******
+                const percentage = ((voteType.votes / totalVotes) * 100).toFixed(2);
                 
                 const otherHtml = `
                     <div class="flex flex-col md:flex-row items-center bg-white p-4 rounded-xl card-shadow transition duration-300 hover:shadow-lg">
