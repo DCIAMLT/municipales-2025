@@ -11,19 +11,11 @@
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fc;
         }
-        /* Estilos personalizados para el contenedor del gráfico */
-        #resultsChartContainer {
-            position: relative;
-            height: 400px;
-            max-width: 900px;
-            margin: auto;
-        }
         /* Estilos para el efecto de sombra y esquinas redondeadas */
         .card-shadow {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
         }
     </style>
-    <!-- Ya no necesitamos Chart.js si eliminamos el gráfico. Mantenemos el script por si acaso, aunque no se usará --><!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> --><!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> -->
 </head>
 <body>
 
@@ -72,7 +64,7 @@
                 </div>
                 <!-- Tarjeta 2: Votos Válidos (Solo Candidatos) -->
                 <div class="bg-gray-50 p-4 rounded-lg border-2 border-blue-300">
-                    <p class="text-xs font-medium text-blue-700 uppercase">Votos Válidos</p>
+                    <p class="text-xs font-medium text-blue-700 uppercase">Votos Válidos (Candidatos)</p>
                     <p id="total-valid-votes" class="text-3xl font-extrabold text-blue-700 mt-1">--</p>
                 </div>
                 <!-- Tarjeta 3: Censo Electoral -->
@@ -96,25 +88,70 @@
     <!-- Script de Inicialización y Lógica --><script>
         // 1. Datos Ficticios de la Elección
         const candidatesData = [
-            // Datos de los candidatos y votos
-            { id: 1, name: "Aurora Ríos", party: "Partido Esperanza", color: "#10B981", votes: 23675, img: "https://placehold.co/80x80/10B981/ffffff?text=AR" },
-            { id: 2, name: "Marcos Vela", party: "Frente Popular", color: "#EF4444", votes: 14876, img: "https://placehold.co/80x80/EF4444/ffffff?text=MV" },
-            //
-            // >>>>>> NUEVO CANDIDATO AÑADIDO AQUÍ <<<<<<
-            // Asegúrate de que el 'id' sea único y el 'color' sea un código hexadecimal válido.
-            //
-            { id: 3, name: "Votos Nulos", party: "Nulo", color: "#9CA3AF", votes: 145, img: "https://placehold.co/80x80/9CA3AF/ffffff?text=N" },
-            { id: 4, name: "Votos en Blanco", party: "Blanco", color: "#D1D5DB", votes: 114, img: "https://placehold.co/80x80/D1D5DB/ffffff?text=B" },
+            // DATOS DE LOS CANDIDATOS: 
+            // 'party' ahora es un ARRAY de objetos { name: 'Nombre del Partido', color: '#HEX' }
+            // El primer partido en el array determina el color principal de la tarjeta.
+            { 
+                id: 1, 
+                name: "Aurora Ríos", 
+                parties: [
+                    { name: "Partido Esperanza", color: "#10B981" }, // Partido Principal (verde)
+                    { name: "Movimiento Verde", color: "#22C55E" },
+                    { name: "Fuerza Independiente", color: "#4B5563" }
+                ], 
+                votes: 4715, 
+                img: "https://placehold.co/80x80/10B981/ffffff?text=AR" 
+            },
+            { 
+                id: 2, 
+                name: "Marcos Vela", 
+                parties: [
+                    { name: "Frente Popular", color: "#EF4444" }, // Partido Principal (rojo)
+                    { name: "Alianza Progresista", color: "#F97316" },
+                    { name: "Democracia Activa", color: "#FACC15" }
+                ], 
+                votes: 8754, 
+                img: "https://placehold.co/80x80/EF4444/ffffff?text=MV" 
+            },
+            
+            // Los Votos Nulos y en Blanco se mantienen con una estructura simple para la compatibilidad con el resto del código
+            { id: 3, name: "Votos Nulos", party: "Nulo", color: "#9CA3AF", votes: 18, img: "https://placehold.co/80x80/9CA3AF/ffffff?text=N" },
+            { id: 4, name: "Votos en Blanco", party: "Blanco", color: "#D1D5DB", votes: 21, img: "https://placehold.co/80x80/D1D5DB/ffffff?text=B" },
         ];
 
         const electoralData = {
             electoralRoll: 52350, // Censo Electoral Total
             // --------------------------------------------------------------------------
             // CAMBIA ESTE VALOR para ajustar la cantidad de mesas escrutadas.
-            totalCountedTables: 50, // Mesas escrutadas (Cambiado de 12580 a 8500 para demostración)
+            totalCountedTables: 2, // Mesas escrutadas
             // --------------------------------------------------------------------------
             totalTables: 50 // Mesas totales
         };
+
+        // Función auxiliar para obtener el color principal y la lista de partidos
+        function getCandidateDetails(candidate) {
+            // Verifica si es un candidato regular con array de 'parties'
+            if (candidate.parties && candidate.parties.length > 0) {
+                // El color principal es el del primer partido
+                const mainColor = candidate.parties[0].color;
+                // Genera el HTML para todos los partidos
+                const partiesHtml = candidate.parties.map(p => `
+                    <span class="text-xs font-medium text-white px-2 py-0.5 inline-block rounded-full mr-1 mb-1" style="background-color: ${p.color};">
+                        ${p.name}
+                    </span>
+                `).join('');
+                
+                return { mainColor, partiesHtml, isCandidate: true };
+            } else {
+                // Es Nulo o Blanco (usa la estructura anterior)
+                return { 
+                    mainColor: candidate.color, 
+                    partiesHtml: `<span class="text-sm font-medium text-white px-2 py-0.5 inline-block rounded-full mt-1" style="background-color: ${candidate.color};">Voto Especial</span>`,
+                    isCandidate: false
+                };
+            }
+        }
+
 
         // 2. Función Principal para Calcular y Renderizar
         function renderResults() {
@@ -122,7 +159,7 @@
             
             // 1. Total de Votos Válidos (SÓLO CANDIDATOS) - USADO COMO DENOMINADOR para CANDIDATOS
             const totalValidVotesOnly = candidatesData
-                .filter(c => c.party !== 'Nulo' && c.party !== 'Blanco')
+                .filter(c => c.parties) // Filtra solo candidatos con el array 'parties'
                 .reduce((sum, c) => sum + c.votes, 0);
 
             // 2. Total de Votos Emitidos (CANDIDATOS + NULOS + BLANCOS) - USADO COMO DENOMINADOR para NULOS/BLANCOS
@@ -159,14 +196,17 @@
             const candidateList = document.getElementById('candidate-list');
             candidateList.innerHTML = ''; // Limpiar lista
 
-            // 1. Ordenar solo candidatos por votos (descendente)
-            const sortedCandidates = candidatesData
-                .filter(c => c.party !== 'Nulo' && c.party !== 'Blanco') // Solo candidatos
-                .sort((a, b) => b.votes - a.votes);
+            // Separar y ordenar candidatos
+            const candidates = candidatesData.filter(c => c.parties);
+            const otherVotes = candidatesData.filter(c => !c.parties);
+
+            const sortedCandidates = candidates.sort((a, b) => b.votes - a.votes);
 
             let rank = 1;
             sortedCandidates.forEach(candidate => {
-                // ****** Lógica de Porcentaje para CANDIDATOS: VOTOS VÁLIDOS (totalValidVotesOnly) ******
+                const { mainColor, partiesHtml } = getCandidateDetails(candidate);
+                
+                // Lógica de Porcentaje para CANDIDATOS: VOTOS VÁLIDOS (totalValidVotesOnly)
                 const percentage = ((candidate.votes / totalValidVotesOnly) * 100).toFixed(2);
                 const isWinner = rank === 1;
 
@@ -175,23 +215,23 @@
 
                         <!-- Posición y Foto --><div class="flex items-center space-x-4 w-full md:w-auto mb-4 md:mb-0">
                             <span class="text-3xl font-extrabold ${isWinner ? 'text-yellow-600' : 'text-gray-400'}">${rank}°</span>
-                            <!-- IMAGEN DEL CANDIDATO --><img src="${candidate.img}" alt="Foto de ${candidate.name}" class="w-16 h-16 rounded-full object-cover border-4" style="border-color: ${candidate.color};" onerror="this.onerror=null; this.src='https://placehold.co/80x80/9CA3AF/ffffff?text=${candidate.name.substring(0,2).replace(/\s/g, '+')}'">
+                            <!-- IMAGEN DEL CANDIDATO --><img src="${candidate.img}" alt="Foto de ${candidate.name}" class="w-16 h-16 rounded-full object-cover border-4" style="border-color: ${mainColor};" onerror="this.onerror=null; this.src='https://placehold.co/80x80/9CA3AF/ffffff?text=${candidate.name.substring(0,2).replace(/\s/g, '+')}'">
                         </div>
 
-                        <!-- Nombre y Partido --><div class="flex-grow text-center md:text-left md:ml-6 w-full md:w-auto mb-4 md:mb-0">
+                        <!-- Nombre y Partidos --><div class="flex-grow text-center md:text-left md:ml-6 w-full md:w-auto mb-4 md:mb-0">
                             <p class="text-xl font-bold text-gray-900">${candidate.name} ${isWinner ? '🏆' : ''}</p>
-                            <!-- COLOR DEL PARTIDO --><div class="text-sm font-medium text-white px-2 py-0.5 inline-block rounded-full mt-1" style="background-color: ${candidate.color};">
-                                ${candidate.party}
+                            <!-- MÚLTIPLES PARTIDOS --><div class="flex flex-wrap mt-1">
+                                ${partiesHtml}
                             </div>
                         </div>
 
                         <!-- Barra de Progreso y Datos --><div class="w-full md:w-1/3 space-y-2">
                             <div class="flex justify-between items-center text-sm font-semibold">
                                 <span class="text-gray-700">Votos: ${candidate.votes.toLocaleString('es-ES')}</span>
-                                <!-- COLOR DEL CANDIDATO EN EL PORCENTAJE --><span class="text-lg font-extrabold" style="color: ${candidate.color};">${percentage}%</span>
+                                <!-- COLOR DEL PARTIDO PRINCIPAL (mainColor) --><span class="text-lg font-extrabold" style="color: ${mainColor};">${percentage}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-3">
-                                <!-- COLOR DEL CANDIDATO EN LA BARRA DE PROGRESO --><div class="h-3 rounded-full" style="width: ${percentage}%; background-color: ${candidate.color};"></div>
+                                <!-- COLOR DEL PARTIDO PRINCIPAL (mainColor) --><div class="h-3 rounded-full" style="width: ${percentage}%; background-color: ${mainColor};"></div>
                             </div>
                         </div>
                     </div>
@@ -200,47 +240,41 @@
                 rank++;
             });
 
-            // Agregamos Nulos y Blancos al final (opcional)
-            const otherVotes = candidatesData.filter(c => c.party === 'Nulo' || c.party === 'Blanco');
-
+            // Agregamos Nulos y Blancos al final
             otherVotes.forEach(voteType => {
-                // ****** Lógica de Porcentaje para NULOS/BLANCOS: VOTOS TOTALES (totalVotes) ******
+                const { mainColor, partiesHtml } = getCandidateDetails(voteType);
+
+                // Lógica de Porcentaje para NULOS/BLANCOS: VOTOS TOTALES (totalVotes)
                 const percentage = ((voteType.votes / totalVotes) * 100).toFixed(2);
                 
                 const otherHtml = `
                     <div class="flex flex-col md:flex-row items-center bg-white p-4 rounded-xl card-shadow transition duration-300 hover:shadow-lg">
                         <div class="flex items-center space-x-4 w-full md:w-auto mb-4 md:mb-0">
                             <span class="text-3xl font-extrabold text-gray-400">--</span>
-                            <img src="${voteType.img}" alt="Icono de ${voteType.name}" class="w-16 h-16 rounded-full object-cover border-4" style="border-color: ${voteType.color};" onerror="this.onerror=null; this.src='https://placehold.co/80x80/9CA3AF/ffffff?text=OV'">
+                            <img src="${voteType.img}" alt="Icono de ${voteType.name}" class="w-16 h-16 rounded-full object-cover border-4" style="border-color: ${mainColor};" onerror="this.onerror=null; this.src='https://placehold.co/80x80/9CA3AF/ffffff?text=OV'">
                         </div>
 
                         <div class="flex-grow text-center md:text-left md:ml-6 w-full md:w-auto mb-4 md:mb-0">
                             <p class="text-xl font-bold text-gray-900">${voteType.name}</p>
-                            <div class="text-sm font-medium text-white px-2 py-0.5 inline-block rounded-full mt-1" style="background-color: ${voteType.color};">
-                                Voto Especial
+                            <!-- MÚLTIPLES PARTIDOS (o solo Voto Especial) -->
+                            <div class="flex flex-wrap mt-1">
+                                ${partiesHtml}
                             </div>
                         </div>
 
                         <div class="w-full md:w-1/3 space-y-2">
                             <div class="flex justify-between items-center text-sm font-semibold">
                                 <span class="text-gray-700">Votos: ${voteType.votes.toLocaleString('es-ES')}</span>
-                                <span class="text-lg font-extrabold" style="color: ${voteType.color};">${percentage}%</span>
+                                <span class="text-lg font-extrabold" style="color: ${mainColor};">${percentage}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="h-3 rounded-full" style="width: ${percentage}%; background-color: ${voteType.color};"></div>
+                                <div class="h-3 rounded-full" style="width: ${percentage}%; background-color: ${mainColor};"></div>
                             </div>
                         </div>
                     </div>
                 `;
                 candidateList.insertAdjacentHTML('beforeend', otherHtml);
             });
-
-
-            // D. Renderizar Gráfico (Chart.js) - ELIMINADO EL CÓDIGO DEL GRÁFICO
-            if (window.electionChart) {
-                window.electionChart.destroy();
-            }
-            // Los datos necesarios para el gráfico ya no son llamados.
         }
 
         // 3. Inicializar y Actualizar
