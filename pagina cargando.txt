@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargando Resultados Electorales</title>
+    <!-- Carga de Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Fondo blanco simple */
+            background-color: #f7f9fc; 
+        }
+        /* Contenedor principal para centrar el contenido y ocupar toda la pantalla */
+        #loading-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        /* Estilo para la animación de carga (opcional) */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6; /* Azul de Tailwind */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Contenedor de Carga Centrado y Responsivo --><div id="loading-container">
+        <div class="max-w-xl mx-auto p-8 rounded-xl bg-white shadow-2xl transition duration-500 ease-in-out transform hover:scale-105">
+            
+            <!-- Espacio para la Imagen Grande -->
+            <div class="mb-8" id="image-placeholder">
+                <!-- La imagen se insertará aquí mediante JavaScript -->
+            </div>
+
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
+                ¡Atención!
+            </h1>
+            
+            <p class="text-xl sm:text-2xl text-blue-600 font-semibold mb-8">
+                Los Resultados de las elecciones se mostrarán en breve.
+            </p>
+            
+            <!-- Spinner de Carga -->
+            <div class="mx-auto spinner"></div>
+
+            <p class="mt-8 text-sm text-gray-500">
+                Esperando la consolidación de actas oficiales.
+            </p>
+        </div>
+    </div>
+
+    <!-- Script para Configuración de la Imagen --><script>
+        // =========================================================================
+        // CONFIGURACIÓN DE LA IMAGEN DESDE EL CÓDIGO FUENTE
+        // =========================================================================
+        const IMAGE_CONFIG = {
+            // URL de la imagen que quieres mostrar. 
+            // Usa una URL de placeholder si no tienes una específica.
+            imageUrl: "https://placehold.co/400x200/3b82f6/ffffff?text=LOGO+OFICIAL",
+            altText: "Logo Oficial de la Jornada Electoral"
+        };
+        
+        // Función para inyectar la imagen
+        function setupImage() {
+            const container = document.getElementById('image-placeholder');
+            
+            // Creamos el elemento de imagen
+            const img = document.createElement('img');
+            img.src = IMAGE_CONFIG.imageUrl;
+            img.alt = IMAGE_CONFIG.altText;
+            
+            // Aplicamos estilos de Tailwind para que sea responsiva y grande
+            img.className = 'w-full max-w-sm h-auto mx-auto rounded-lg shadow-lg';
+            
+            // Manejo de errores si la URL no carga
+            img.onerror = function() {
+                console.error("No se pudo cargar la imagen. Usando texto alternativo.");
+                container.innerHTML = `<div class="text-gray-400 text-xl font-bold border-2 border-dashed border-gray-300 p-6 rounded-lg">${IMAGE_CONFIG.altText}</div>`;
+            };
+
+            container.appendChild(img);
+        }
+
+        document.addEventListener('DOMContentLoaded', setupImage);
+    </script>
+</body>
+</html>
