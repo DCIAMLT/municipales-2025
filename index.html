@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados Congreso Bicameral</title>
+    <!-- Carga de Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Contenedor Principal --><div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Encabezado y Título Principal --><header class="mb-8 text-center">
+            <h1 id="main-title" class="4xl font-extrabold text-gray-900 leading-tight mb-2">
+                <!-- Título principal -->
+            </h1>
+            <p id="sub-title" class="text-lg text-gray-500">
+                <!-- Subtítulo -->
+            </p>
+        </header>
+
+        <!-- Pestañas (Cámara Baja / Cámara Alta) --><div class="flex border-b border-gray-200 mb-8">
+            <button id="tab-baja" class="py-3 px-6 text-sm font-semibold text-gray-600 border-b-2 border-transparent hover:border-blue-500 hover:text-blue-600 transition duration-150" onclick="changeChamber('baja')">
+                <!-- Texto de la Pestaña Baja -->
+            </button>
+            <button id="tab-alta" class="py-3 px-6 text-sm font-semibold text-gray-600 border-b-2 border-transparent hover:border-blue-500 hover:text-blue-600 transition duration-150" onclick="changeChamber('alta')">
+                <!-- Texto de la Pestaña Alta -->
+            </button>
+        </div>
+
+        <!-- Contenido Específico de la Cámara -->
+        <div id="chamber-content">
+            <!-- Título de la Cámara y Escrutinio -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 p-4 bg-white rounded-xl card-shadow">
+                <h2 id="chamber-title" class="text-3xl font-bold text-gray-800 mb-3 sm:mb-0">
+                    <!-- Título de la Cámara (ej: Cámara de Diputados) -->
+                </h2>
+                <!-- Bloque de Escrutinio -->
+                <div class="text-right">
+                    <p class="text-sm font-medium text-gray-500">
+                        <span id="label-counted-tables"><!-- Mesas Escrutadas: --></span> <span id="counted-tables" class="font-bold text-gray-900">--</span> / <span id="total-tables">--</span>
+                    </p>
+                    <p id="counted-percent" class="text-xl font-bold text-blue-600">--% <!-- Escrutado --></p>
+                    <div class="w-40 bg-gray-200 rounded-full h-2 mt-1 ml-auto">
+                        <div id="escru-progressbar" class="h-2 bg-blue-600 transition-all duration-700 ease-out" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen de Escaños y Mayoría -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"> 
+                <div class="bg-blue-50 p-6 rounded-xl card-shadow border-l-4 border-blue-500">
+                    <p id="label-total-seats" class="text-sm font-medium text-blue-700 uppercase">
+                        <!-- Total Escaños -->
+                    </p>
+                    <p id="total-seats" class="4xl font-extrabold text-blue-900 mt-1">--</p>
+                </div>
+                <div class="bg-yellow-50 p-6 rounded-xl card-shadow border-l-4 border-yellow-500">
+                    <p id="label-required-majority" class="text-sm font-medium text-yellow-700 uppercase">
+                        <!-- Mayoría Absoluta Requerida -->
+                    </p>
+                    <p id="required-majority" class="4xl font-extrabold text-yellow-900 mt-1">--</p>
+                </div>
+            </div>
+
+            <!-- Distribución de Escaños por Partido -->
+            <section class="mb-8">
+                <h3 id="label-table-title" class="text-2xl font-semibold text-gray-800 mb-4">
+                    <!-- Distribución de Escaños y Votos -->
+                </h3>
+                <div id="party-results" class="space-y-4">
+                    <!-- Las filas de partidos se insertarán aquí -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Resumen General de la Jornada -->
+        <section class="bg-white p-6 rounded-xl card-shadow mt-8">
+            <h2 id="label-national-stats-title" class="text-2xl font-semibold text-gray-800 mb-4">
+                <!-- Estadísticas Nacionales del Escrutinio -->
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p id="label-total-votes-all" class="text-xs font-medium text-gray-500 uppercase">
+                        <!-- Votos Totales Emitidos -->
+                    </p>
+                    <p id="total-votes-all-summary" class="3xl font-extrabold text-gray-800 mt-1">--</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p id="label-total-valid-votes" class="text-xs font-medium text-gray-500 uppercase">
+                        <!-- Votos Válidos (Partidos) -->
+                    </p>
+                    <p id="total-valid-votes-summary" class="3xl font-extrabold text-blue-700 mt-1">--</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+                    <p id="label-participation" class="text-xs font-medium text-green-700 uppercase">
+                        <!-- Participación -->
+                    </p>
+                    <p id="participation-rate" class="3xl font-extrabold text-green-700 mt-1">--</p>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-sm text-gray-600">
+                <p id="label-note">
+                    <!-- Nota y explicación -->
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Script de Inicialización y Lógica --><script>
+        // =========================================================================
+        // 1. ESTRUCTURA DE DATOS PRINCIPAL (¡TODO ES EDITABLE AQUÍ!)
+        // =========================================================================
+        
+        const ELECTION_CONFIG = {
+            // --- BLOQUE 1: TEXTOS GLOBALES DE LA INTERFAZ (TODOS LOS TÍTULOS Y ETIQUETAS) ---
+            globalTexts: {
+                mainTitle: "Resultados Elecciones Legislativas 2025",
+                subTitle: "Análisis de Composición del Congreso Nacional",
+                
+                // Pestañas (Button Text)
+                tabBajaText: "Cámara de Diputados", 
+                tabAltaText: "Cámara de Senadores", 
+                
+                // Bloques de Resumen
+                totalSeatsLabel: "Total Escaños",
+                requiredMajorityLabel: "Escaños a Elegir",
+                tableHeaderTitle: "Distribución de Escaños y Votos",
+                
+                // Estadísticas
+                nationalStatsTitle: "Estadísticas Nacionales del Escrutinio",
+                totalVotesAllLabel: "Votos Totales Emitidos",
+                totalValidVotesLabel: "Votos Válidos",
+                participationLabel: "Participación",
+                
+                // Escrutinio y Notas
+                countedTablesLabel: "Mesas Escrutadas:",
+                escrutinioStatusLabel: "Escrutado",
+                tableHeaderParty: "Partido",
+                tableHeaderSeats: "Escaños",
+                tableHeaderVotes: "Votos",
+                tableHeaderVotePercent: "Votos Totales (%)",
+                note: "Los datos de Votos y Escaños se cargan desde el código fuente y deben editarse allí para simular la composición de la cámara."
+            },
+            
+            // --- BLOQUE 2: CONFIGURACIÓN GENERAL ---
+            electoralRoll: 13802315, // Censo Electoral Total
+            voteThresholdPercent: 3, // Umbral mínimo de votos para obtener escaños (ej. 3%)
+
+            // --- BLOQUE 3: CÁMARA BAJA (Diputados) ---
+            baja: {
+                title: "Cámara de Diputados", // Título principal del panel de la cámara
+                totalSeats: 167,
+                totalTables: 25861,
+                totalCountedTables: 25581, // <<-- EDITAR MESAS ESCRUTADAS AQUÍ
+                
+                // <<<<----- CÁMARA BAJA: EDITAR AQUÍ PARA MAYORÍA ABSOLUTA FIJA ----->>>>
+                customMajoritySeats: 167, // 0 = Cálculo Automático (84). >0 = Valor Fijo.
+                
+                // DATOS DE LOS PARTIDOS (EDITABLES: votes, seats, name, color)
+                parties: [
+                    { name: "Frente de la Libertad (FL)", color: "#DC2626", votes: 4205789, isMain: true, seats: 74 },
+                    { name: "Alianza por el Progreso (AP)", color: "#1D4ED8", votes: 3102384, isMain: false, seats: 54 },
+                    { name: "Movimiento Ciudadano (MC)", color: "#F59E0B", votes: 1768385, isMain: false, seats: 31 },
+                    { name: "Otros partidos", color: "#787878", votes: 501293, isMain: false, seats: 8 },
+                    { name: "Votos Nulos", color: "#9CA3AF", votes: 1823, isMain: false, isNullBlank: true, seats: 0 },
+                    { name: "Votos en Blanco", color: "#D1D5DB", votes: 2102, isMain: false, isNullBlank: true, seats: 0 }
+                ]
+            },
+
+            // --- BLOQUE 4: CÁMARA ALTA (Senadores) ---
+            alta: {
+                title: "Cámara de Senadores", // Título principal del panel de la cámara
+                totalSeats: 100,
+                totalTables: 108992,
+                totalCountedTables: 108141, // <<-- EDITAR MESAS ESCRUTADAS AQUÍ
+                
+                // <<<<----- CÁMARA ALTA: EDITAR AQUÍ PARA MAYORÍA ABSOLUTA FIJA ----->>>>
+                customMajoritySeats: 100, // 0 = Cálculo Automático (18). >0 = Valor Fijo.
+                
+                // DATOS DE LOS PARTIDOS (EDITABLES: votes, seats, name, color)
+                parties: [
+                    { name: "Frente de la Libertad (FL)", color: "#DC2626", votes: 4205789, isMain: true, seats: 44 },
+                    { name: "Alianza por el Progreso (AP)", color: "#1D4ED8", votes: 3102384, isMain: false, seats: 33 },
+                    { name: "Movimiento Ciudadano (MC)", color: "#F59E0B", votes: 1768385, isMain: false, seats: 18 },
+                    { name: "Otros partidos", color: "#787878", votes: 501293, isMain: false, seats: 5 },
+                    { name: "Votos Nulos", color: "#9CA3AF", votes: 915, isMain: false, isNullBlank: true, seats: 0 },
+                    { name: "Votos en Blanco", color: "#D1D5DB", votes: 1564, isMain: false, isNullBlank: true, seats: 0 }
+                ]
+            }
+        };
+
+        let currentChamber = 'baja'; // Cámara por defecto al cargar
+
+        // =========================================================================
+        // 2. FUNCIÓN PARA RENDERIZAR TODOS LOS TEXTOS ESTÁTICOS GLOBALES
+        // =========================================================================
+
+        function renderGlobalTexts() {
+            const texts = ELECTION_CONFIG.globalTexts;
+            
+            // Títulos y Subtítulos
+            document.getElementById('main-title').textContent = texts.mainTitle;
+            document.getElementById('sub-title').textContent = texts.subTitle;
+            
+            // Pestañas
+            document.getElementById('tab-baja').textContent = texts.tabBajaText;
+            document.getElementById('tab-alta').textContent = texts.tabAltaText;
+
+            // Resumen de la Cámara
+            document.getElementById('label-total-seats').textContent = texts.totalSeatsLabel;
+            document.getElementById('label-required-majority').textContent = texts.requiredMajorityLabel;
+            document.getElementById('label-table-title').textContent = texts.tableHeaderTitle;
+
+            // Estadísticas Nacionales
+            document.getElementById('label-national-stats-title').textContent = texts.nationalStatsTitle;
+            document.getElementById('label-total-votes-all').textContent = texts.totalVotesAllLabel;
+            document.getElementById('label-total-valid-votes').textContent = texts.totalValidVotesLabel;
+            document.getElementById('label-participation').textContent = texts.participationLabel;
+            
+            // Escrutinio y Nota
+            document.getElementById('label-counted-tables').textContent = texts.countedTablesLabel;
+            document.getElementById('label-note').innerHTML = `<span class="font-bold">Nota:</span> ${texts.note}`;
+        }
+
+
+        // =========================================================================
+        // 3. FUNCIÓN DE PREPARACIÓN DE DATOS Y CÁLCULOS
+        // =========================================================================
+
+        /**
+         * Prepara los datos electorales, calcula porcentajes y suma los escaños actuales.
+         * @param {string} chamberKey - Clave de la cámara actual ('baja' o 'alta').
+         */
+        function prepareElectionData(chamberKey) {
+            // CRÍTICO: Asegurarse de usar la configuración específica de la cámara
+            const chamberData = ELECTION_CONFIG[chamberKey]; 
+            const validParties = chamberData.parties.filter(p => !p.isNullBlank);
+            
+            // 1. Calcular Votos Válidos y Votos Totales
+            const totalValidVotes = validParties.reduce((sum, p) => sum + p.votes, 0);
+            const totalVotesAll = chamberData.parties.reduce((sum, p) => sum + p.votes, 0);
+
+            // 2. Calcular porcentajes y sumar escaños
+            let allocatedSeats = 0;
+            validParties.forEach((party) => {
+                
+                // Calcular porcentajes de votos
+                party.percentageOfValidVotes = ((party.votes / totalValidVotes) * 100).toFixed(2);
+                party.percentageOfTotalVotes = ((party.votes / totalVotesAll) * 100).toFixed(2);
+
+                // Sumar los escaños (del código fuente)
+                allocatedSeats += party.seats;
+                
+                // Calcular el ancho de la barra de escaños
+                party.seatBarWidth = ((party.seats / chamberData.totalSeats) * 100).toFixed(2);
+            });
+
+            // 3. Calcular porcentajes para Nulos y Blancos (sobre Votos Totales)
+            const nullBlankVotes = chamberData.parties.filter(p => p.isNullBlank);
+            nullBlankVotes.forEach(p => {
+                p.percentageOfTotalVotes = ((p.votes / totalVotesAll) * 100).toFixed(2);
+            });
+
+            // 4. Ordenar los resultados para la tabla
+            const sortedResults = chamberData.parties
+                .filter(p => !p.isNullBlank)
+                .sort((a, b) => b.seats - a.seats)
+                .concat(chamberData.parties.filter(p => p.isNullBlank));
+
+            // 5. Calcular Mayoría Requerida
+            // Si customMajoritySeats es > 0, usa ese valor. Si es 0 o menos, calcula automáticamente.
+            const requiredMajority = chamberData.customMajoritySeats > 0 ?
+                chamberData.customMajoritySeats :
+                Math.floor(chamberData.totalSeats / 2) + 1;
+
+            // Retornar los datos para el resumen
+            return {
+                sortedResults,
+                totalValidVotes,
+                totalVotesAll,
+                requiredMajority: requiredMajority,
+                allocatedSeats,
+                chamberData // Se devuelve la configuración de la cámara actual también
+            };
+        }
+        
+        // =========================================================================
+        // 4. FUNCIONES DE RENDERIZADO
+        // =========================================================================
+
+        /**
+         * Renderiza la tabla de resultados de partidos.
+         */
+        function renderPartyTable(results, totalSeats) {
+            const container = document.getElementById('party-results');
+            container.innerHTML = '';
+            const texts = ELECTION_CONFIG.globalTexts;
+            
+            // Header dinámico de la tabla
+            container.insertAdjacentHTML('beforeend', `
+                <div class="hidden md:grid grid-cols-10 gap-4 font-bold text-xs text-gray-500 uppercase pb-2 border-b">
+                    <div class="col-span-4">${texts.tableHeaderParty}</div>
+                    <div class="col-span-2 text-center">${texts.tableHeaderSeats} (${totalSeats})</div>
+                    <div class="col-span-2 text-right">${texts.tableHeaderVotes}</div>
+                    <div class="col-span-2 text-right">${texts.tableHeaderVotePercent}</div>
+                </div>
+            `);
+
+            results.forEach(party => {
+                const isNullBlank = party.isNullBlank;
+                const isMainParty = party.isMain;
+                
+                // Colores y porcentajes
+                const percentageColor = isNullBlank ? '#4B5563' : party.color; 
+                const barColor = party.color; 
+                const votePercentage = isNullBlank ? party.percentageOfTotalVotes : party.percentageOfValidVotes;
+                const percentageLabel = isNullBlank ? 'Total' : 'Válidos';
+
+                // Escaños y ancho de barra
+                const seatsDisplay = isNullBlank ? '--' : party.seats;
+                const seatBarWidth = isNullBlank ? 0 : party.seatBarWidth; 
+
+                const rowHtml = `
+                    <div class="bg-white p-4 rounded-lg card-shadow grid grid-cols-10 gap-4 items-center">
+                        
+                        <!-- Columna 1: Partido -->
+                        <div class="col-span-10 md:col-span-4 flex items-center space-x-3">
+                            <div class="w-2 h-6 rounded-sm ${isMainParty ? 'border-2 border-gray-400' : ''}" style="background-color: ${barColor};"></div>
+                            <span class="text-sm font-semibold ${isNullBlank ? 'text-gray-500' : 'text-gray-800'}">${party.name}</span>
+                        </div>
+
+                        <!-- Columna 2: Escaños (Barra y Valor Estático) -->
+                        <div class="col-span-5 md:col-span-2 flex flex-col items-center">
+                            <p class="text-lg font-bold ${isNullBlank ? 'text-gray-400' : 'text-blue-700'}">${seatsDisplay}</p>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                <div class="h-2 rounded-full" style="width: ${seatBarWidth}%; background-color: ${barColor};"></div>
+                            </div>
+                        </div>
+
+                        <!-- Columna 3: Votos (Número) -->
+                        <div class="col-span-5 md:col-span-2 text-right">
+                            <p class="text-sm font-semibold text-gray-700">${party.votes.toLocaleString('es-ES')}</p>
+                        </div>
+                        
+                        <!-- Columna 4: Porcentaje (Barra y Porcentaje) -->
+                        <div class="col-span-10 md:col-span-2 flex flex-col items-end pt-2 md:pt-0 border-t md:border-t-0 mt-2 md:mt-0">
+                            <span class="text-sm font-extrabold" style="color: ${percentageColor};">${votePercentage}%</span>
+                            <span class="text-xs text-gray-500">sobre Votos ${percentageLabel}</span>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', rowHtml);
+            });
+        }
+
+        /**
+         * Renderiza la información general de la cámara.
+         */
+        function renderChamberDetails(config, calculatedData) {
+            const texts = ELECTION_CONFIG.globalTexts;
+            // Desestructuración de datos calculados
+            const { totalValidVotes, totalVotesAll, requiredMajority } = calculatedData;
+            
+            // Renderizar encabezados de la cámara (tomando el título de la config específica)
+            document.getElementById('chamber-title').textContent = config.title;
+            document.getElementById('total-seats').textContent = config.totalSeats;
+            document.getElementById('required-majority').textContent = requiredMajority;
+
+            // Renderizar escrutinio
+            const countedTablesRate = ((config.totalCountedTables / config.totalTables) * 100).toFixed(2);
+            document.getElementById('counted-tables').textContent = config.totalCountedTables.toLocaleString('es-ES');
+            document.getElementById('total-tables').textContent = config.totalTables.toLocaleString('es-ES');
+            document.getElementById('counted-percent').textContent = `${countedTablesRate}% ${texts.escrutinioStatusLabel}`;
+            document.getElementById('escru-progressbar').style.width = `${countedTablesRate}%`;
+
+            // Renderizar resumen nacional
+            document.getElementById('total-votes-all-summary').textContent = totalVotesAll.toLocaleString('es-ES');
+            document.getElementById('total-valid-votes-summary').textContent = totalValidVotes.toLocaleString('es-ES');
+            
+            const participationRate = ((totalVotesAll / ELECTION_CONFIG.electoralRoll) * 100).toFixed(2);
+            document.getElementById('participation-rate').textContent = `${participationRate}%`;
+
+            // Renderizar tabla de partidos
+            renderPartyTable(calculatedData.sortedResults, config.totalSeats);
+        }
+
+        // =========================================================================
+        // 5. CONTROL DE CÁMARAS Y EVENTOS
+        // =========================================================================
+
+        /**
+         * Cambia la cámara activa y actualiza la UI.
+         */
+        function changeChamber(chamberKey) {
+            currentChamber = chamberKey;
+            
+            // Actualizar botones de pestaña
+            document.getElementById('tab-baja').classList.remove('border-blue-500', 'text-blue-600');
+            document.getElementById('tab-alta').classList.remove('border-blue-500', 'text-blue-600');
+            
+            document.getElementById(`tab-${chamberKey}`).classList.add('border-blue-500', 'text-blue-600');
+
+            // Preparar y Renderizar
+            // CRÍTICO: Asegurarse de usar la clave de la cámara actual.
+            const preparedData = prepareElectionData(chamberKey);
+            
+            // Renderizar usando los datos de configuración y los cálculos
+            renderChamberDetails(preparedData.chamberData, preparedData);
+        }
+
+        // Inicialización al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            // PASO 1: RENDERIZAR TODOS LOS TEXTOS GLOBALES ESTÁTICOS
+            renderGlobalTexts();
+
+            // PASO 2: Establecer la pestaña activa por defecto
+            document.getElementById('tab-baja').classList.add('border-blue-500', 'text-blue-600');
+            
+            // PASO 3: Renderizar los datos iniciales de la cámara baja
+            // Se usa 'baja' como clave inicial
+            const preparedData = prepareElectionData('baja'); 
+            renderChamberDetails(preparedData.chamberData, preparedData);
+        });
+    </script>
+</body>
+</html>
